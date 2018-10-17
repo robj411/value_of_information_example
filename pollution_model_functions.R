@@ -75,16 +75,17 @@ get_parameters <- function(){
   # ventilation rates for walking and cycling
   parameters$lambda1 <- Lnorm(1,1)
   parameters$lambda2 <- Lnorm(2,0.4)
-  parameters$lambda3 <- Dirac(0.5)
-  parameters$lambda4 <- Dirac(0.5)
-  parameters$lambda5 <- Dirac(1)
-  parameters$lambda6 <- Dirac(0.5)
   
   # allocation of traffic pollution to modes
   parameters$alpha1 <- Gammad(shape=32,scale=1) # buses
   parameters$alpha2 <- Gammad(shape=8,scale=1) # cars
   parameters$alpha3 <- Gammad(shape=4,scale=1) # motorbikes
   parameters$alpha4 <- Gammad(shape=56,scale=1) # goods vehicles
+  
+  parameters$lambda3 <- Dirac(0.5)
+  parameters$lambda4 <- Dirac(0.5)
+  parameters$lambda5 <- Dirac(1)
+  parameters$lambda6 <- Dirac(0.5)
   
   return(parameters)
 }
@@ -96,10 +97,9 @@ interp <- function(V,HH){
   return(out)
 }
 
-pollution_calculation <- function(const,parameters){
+pollution_calculation <- function(const,parameters,seed){
   ## INDEX TRANSLATIONS
-  
-  disease_pm_to_all <- 2:5
+  set.seed(seed)
   disease_all_in_pm <- c(1,2,16,17)
   
   all_modes_to_travel <- 1:6
@@ -124,9 +124,9 @@ pollution_calculation <- function(const,parameters){
   parameter_samples[which(names(parameters)%in%c("alpha1","alpha2","alpha3","alpha4"))] <- alpha
   P <- to.tensor(c(0,0,alpha),dims=c(travel_modes=6),ndimnames=list(dimnames(TTT)[[2]]))
   # ventilation rate
-  lambda <- to.tensor(1+sapply(paste0('lambda',lambda_indices),get),dims=c(travel_modes=6),ndimnames=list(dimnames(TTT)[[2]]))
+  lambda <- to.tensor(1+c(lambda1,lambda2,lambda3,lambda4,lambda5,lambda6),dims=c(travel_modes=6),ndimnames=list(dimnames(TTT)[[2]]))
   # disease relative risks
-  xi <- to.tensor(c(1,xi2,xi3,xi4,xi5),dims=c(disease_pm=5),ndimnames=list(dimnames(H)[[1]]))
+  xi <- to.tensor(c(xi2,xi3,xi4,xi5),dims=c(disease_pm=4),ndimnames=list(dimnames(H)[[1]]))
   
   ## total population travel = average travel per person time population numbers
   A <- TT*N
@@ -148,14 +148,14 @@ pollution_calculation <- function(const,parameters){
   Vche <- Vhat*Pbar
   
   Htil <- 1+(H-1)*xi
-  HH <- matrix(Htil,ncol=5,byrow=T)
+  HH <- matrix(Htil,ncol=4,byrow=T)
   
   Hhat <- apply(Vche,c(2,3),interp,HH=HH)
-  Hhat <- as.tensor(Hhat,dims=c(age=6,disease_pm=5,scenario=6,gender=2))
+  Hhat <- as.tensor(Hhat,dims=c(age=6,disease_pm=4,scenario=6,gender=2))
   dimnames(Hhat) <- list(dimnames(U)[[1]],dimnames(H)[[1]],dimnames(TT)[[3]],dimnames(U)[[4]])
-  Hche <- Hhat[[disease_pm=disease_pm_to_all]]/Hhat[[scenario=1,disease_pm=disease_pm_to_all]]
+  Hche <- Hhat/Hhat[[scenario=1]]
   Util <- Hche*U[[disease=~disease_pm,disease_pm=disease_all_in_pm]]
-  return(list(parameter_samples=parameter_samples,Util=Util))
+  return(list(parameter_samples=parameter_samples,Util=Util,Pbar=Pbar,V=V,Hche=Hche,U=U[[disease=~disease_pm,disease_pm=disease_all_in_pm]]))
 }
 
 
