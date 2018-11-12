@@ -1,6 +1,6 @@
 ---
 title: "EVPPI example"
-output: html_notebook
+output: html_document
 ---
 
 Start
@@ -51,29 +51,23 @@ The total number of samples is
 ```{r length of result}
 length(result)
 ```
-
 Each result has the following dimensions:
-
 ```{r dimensions of each result}
 names(dim(result[[1]]))
 ```
-
 The scenarios are
 ```{r scenarios}
 dimnames(result[[1]])$scenario
 ```
-
-
 The outcomes are
 ```{r outcomes}
 dimnames(result[[1]])$outcome
 ```
 
-
-choose the 'best case' scenario, SP2040, and the 'DALY' outcome
+choose the 'best case' scenario, SP2040, and the 'death' outcome
 ```{r choose scenario and outcome}
 scenario_index <- 6
-outcome_index <- 2
+outcome_index <- 1
 ```
 
 List the variable parameters to evaluate EVPPI for, and the alpha parameters to be evaluated together
@@ -116,20 +110,24 @@ for(i in 1:length(non_constant_parameters)){
   # evaluate evppi
   evppi[i] <- (vary-mean((y-model$fitted)^2))/vary*100;
 }
+names(evppi) <- non_constant_parameters
 ```
 
 Evaluate EVPPI for dependent parameters
 ```{r multivariate EVPPI}
-# get alpha parameter samples
-x <- parameter_samples[,which(colnames(parameter_samples)==alpha_parameters)];
-##!! computation takes a few minutes
-model <- gam(y~te(x[,1],x[,2],x[,3],x[,4]));
-# get evppi
-evppi[i+1] <- (vary-mean((y-model$fitted)^2))/vary*100
+if(length(y)>=1000){
+  # get alpha parameter samples
+  x <- parameter_samples[,which(colnames(parameter_samples)==alpha_parameters)];
+  ##!! computation takes a few minutes
+  model <- gam(y~te(x[,1],x[,2],x[,3],x[,4]));
+  # get evppi
+  evppi[i+1] <- (vary-mean((y-model$fitted)^2))/vary*100
+  names(evppi)[i+1] <- 'alpha'
+}
 ```
 
-```{r name EVPPI vector}
-names(evppi) <- c(non_constant_parameters,'alpha')
+Print result
+```{r EVPPI vector}
 evppi
 ```
 

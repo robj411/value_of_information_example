@@ -1,62 +1,3 @@
-## CONST contains:
-# N : population numbers by age and gender
-# TT : time travelled by age, mode, scenario and gender
-# TTT : time travelled by age, mode, scenario and gender
-# U : background burden of disease by age, outcome, disease, gender
-# H : air-pollution dose--response look-up table, by disease and pm value
-
-## INDICES ##
-# age
-# 1 18-29
-# 2 30-44
-# 3 45-59
-# 4 60-69
-# 5 70-79
-# 6 80+
-# gender
-# 1 m
-# 2 f
-# burden outcome
-# 1 death
-# 2 DALY
-# 3 YLD
-# 4 YLL
-# scenario
-# 1 SP 2012 (baseline)
-# 2 expanded centre
-# 3 peripheral belt
-# 4 London 2012
-# 5 California
-# 6 SP 2040
-# mode (travel_modes)
-# 1 walk
-# 2 cycle
-# 3 bus
-# 4 car/taxi
-# 5 motorbike
-# 6 metro & train
-# (all_modes)
-# 7 LGV
-# 8 HGV
-# 9 other motor vehicle
-# diseases 
-# 1 stroke
-# 2 IHD
-# 3 other cardio/circulatory
-# 4 T2D
-# 5 colon cancer
-# 6 breast cancer
-# 7 dementia and alzheimer's
-# 8 depression
-# 9 all-cause mortality woodcock
-# 10 pedestrian injury
-# 11 cyclist injury
-# 12 mc injury
-# 13 car, van, bus, truck injury
-# 14 other road injury
-# 15 other transport injury
-# 16 lung cancer
-# 17 COPD
 
 get_parameters <- function(){
   
@@ -90,10 +31,10 @@ get_parameters <- function(){
   return(parameters)
 }
 
-interp <- function(V,HH){
-  lower <- sapply(V,function(x)max(1,min(floor(x),dim(HH)[1])))
-  upper <- sapply(V,function(x)min(ceiling(x),dim(HH)[1]))
-  out <- HH[lower,] + (HH[upper,] - HH[lower,])*(V - lower)
+interp <- function(V,HdV){
+  lower <- sapply(V,function(x)max(1,min(floor(x),dim(HdV)[1])))
+  upper <- sapply(V,function(x)min(ceiling(x),dim(HdV)[1]))
+  out <- HdV[lower,] + (HdV[upper,] - HdV[lower,])*(V - lower)
   return(out)
 }
 
@@ -132,49 +73,49 @@ pollution_calculation <- function(const,parameters){
   ## TRAVEL CALCULATIONS
   # total population travel = average travel per person time population numbers
   A <- TT*N
-  Atil <- margin.tensor(A,i=c('age','gender'))/dim(A)['age']/dim(A)['gender']
-  Ahat <- Atil/Atil[[scenario=1]]
-  Atil[is.nan(Atil)] <- 1
-  Ahat[is.nan(Ahat)] <- 1
+  A_tilde <- margin.tensor(A,i=c('age','gender'))/dim(A)['age']/dim(A)['gender']
+  A_hat <- A_tilde/A_tilde[[scenario=1]]
+  A_tilde[is.nan(A_tilde)] <- 1
+  A_hat[is.nan(A_hat)] <- 1
   A[is.nan(A)] <- 1
   
   ## POLLUTION CALCULATIONS
   # pollution from individual modes = original pollution from mode * change in mode use
-  Ptil <- P*Ahat[[all_modes=~travel_modes,travel_modes=all_modes_to_travel]]
+  P_tilde <- P*A_hat[[all_modes=~travel_modes,travel_modes=all_modes_to_travel]]
   # total pollution from traffic = sum over modes
-  Phat <- margin.tensor(Ptil,i='travel_modes') 
-  # total pollution = background pollution (eta(1-zeta)) plus new traffic pollution (eta*zeta*Phat)
-  Pbar <- eta*(zeta*Phat+1-zeta)
+  P_hat <- margin.tensor(P_tilde,i='travel_modes') 
+  # total pollution = background pollution (eta(1-zeta)) plus new traffic pollution (eta*zeta*P_hat)
+  P_bar <- eta*(zeta*P_hat+1-zeta)
   
   ## VENTILATION CALCULATIONS
   # ventilation rate = 1+lambda
   V <- 1+lambda
   # ventilation in travel = ventilation rate in mode * time spent in mode
-  Vtil <- V*TTT
+  V_bar <- V*TTT
   # total ventilation = sum over modes
-  Vtil <- margin.tensor(Vtil,i='travel_modes')
+  V_tilde <- margin.tensor(V_bar,i='travel_modes')
   # overall ventilation = travel ventilation + non-travel ventilation
-  Vhat <- (Vtil + 1440 - margin.tensor(TTT,i='travel_modes'))/1440
+  V_hat <- (V_tilde + 1440 - margin.tensor(TTT,i='travel_modes'))/1440
   # pollution inhalation = overall ventilation * pollution level
-  Vche <- Vhat*Pbar
+  V_check <- V_hat*P_bar
   
   ## HEALTH-IMPACT CALCULATIONS
   # uncertainty in relative-risk dose--response curve
-  Htil <- 1+(H-1)*xi
+  Hd <- 1+(H-1)*xi
   # cast as matrix to apply interpolation
-  HH <- matrix(Htil,ncol=4,byrow=T)
+  HdV <- matrix(Hd,ncol=4,byrow=T)
   # interpolate relative risk for each disease given pollution inhalation
-  Hhat <- apply(Vche,c(2,3),interp,HH=HH)
-  Hhat <- as.tensor(Hhat,dims=c(age=6,disease_pm=4,scenario=6,gender=2))
-  dimnames(Hhat) <- list(dimnames(U)[[1]],dimnames(H)[[1]],dimnames(TT)[[3]],dimnames(U)[[4]])
+  H_hat <- apply(V_check,c(2,3),interp,HdV=HdV)
+  H_hat <- as.tensor(H_hat,dims=c(age=6,disease_pm=4,scenario=6,gender=2))
+  dimnames(H_hat) <- list(dimnames(U)[[1]],dimnames(H)[[1]],dimnames(TT)[[3]],dimnames(U)[[4]])
   
   ## BURDEN-OF-DISEASE CALCULATIONS
   # relative risk relative to baseline scenario
-  Hche <- Hhat/Hhat[[scenario=1]]
+  H_check <- H_hat/H_hat[[scenario=1]]
   # burden of disease = burden of disease in baseline scaled by relative risk ratio
-  Util <- Hche*U[[disease=~disease_pm,disease_pm=disease_all_in_pm]]
+  U_tilde <- H_check*U[[disease=~disease_pm,disease_pm=disease_all_in_pm]]
   
-  return(list(parameter_samples=parameter_samples,Util=Util))
+  return(list(parameter_samples=parameter_samples,Util=U_tilde))
 }
 
 
