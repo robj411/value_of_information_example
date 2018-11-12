@@ -3,6 +3,7 @@
 ## To run the example using the saved samples:
 
 Save 'evppi_example_5000_samples.Rds' and run
+
 install.packages('mgcv')
 
 Run the script 'master_script.R'. It will load the saved samples. Then, it will compute and plot EVPPI.
@@ -13,8 +14,11 @@ Run the script 'master_script.R'. It will load the saved samples. Then, it will 
 Save the files 'constants.Rds' and 'pollution_model_functions.R'.
 
 Run
+
 install.packages('mgcv')
+
 install.packages('distr')
+
 install.packages('tensorA')
 
 Run the script 'master_script.R'.
