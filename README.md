@@ -6,7 +6,7 @@ Save 'evppi_example_5000_samples.Rds' and run
 
 install.packages('mgcv')
 
-Run the script 'master_script.R'. It will load the saved samples. Then, it will compute and plot EVPPI.
+Run the script 'evppi_notebook.Rmd'. It will load the saved samples. Then, it will compute and plot EVPPI.
 
 
 ## To run the example generating new samples:
@@ -21,7 +21,7 @@ install.packages('distr')
 
 install.packages('tensorA')
 
-Run the script 'master_script.R'.
+Run the script 'evppi_notebook.Rmd'.
 
 This will load constants.Rds and pollution_model_functions.R. Then it will generate new samples from the model.
 
