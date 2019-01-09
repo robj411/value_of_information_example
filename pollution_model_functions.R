@@ -24,9 +24,9 @@ get_parameters <- function(){
   
   # allocation of traffic pollution to modes
   parameters$alpha1 <- Gammad(shape=32,scale=1) # buses
-  parameters$alpha2 <- Gammad(shape=8,scale=1) # cars
+  parameters$alpha2 <- Gammad(shape=4,scale=1) # cars
   parameters$alpha3 <- Gammad(shape=4,scale=1) # motorbikes
-  parameters$alpha4 <- Gammad(shape=56,scale=1) # goods vehicles
+  parameters$alpha4 <- Gammad(shape=60,scale=1) # goods vehicles
   
   return(parameters)
 }
