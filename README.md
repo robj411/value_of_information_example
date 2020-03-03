@@ -8,9 +8,9 @@ Other VOI metrics include the expected value of perfect information (EVPI), whic
 
 # This example
 
-The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 59. We have a value for that group's disability-adjusted life years (DALYs) due to stroke events, which is a measure of their health burden. Their stroke-DALY health burden is 18,530.
+The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 59. We have a value for that group's disability-adjusted life years (DALYs) due to stroke events, which is a measure of their health burden. Their stroke-DALY health burden is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes.
 
-Additionally, we have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
+We have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
 
 ![parameters](https://github.com/robj411/value_of_information_example/blob/master/parameters.png)
 
