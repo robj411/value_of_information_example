@@ -25,7 +25,7 @@ and the parameters that we could most usefully learn to increase precision in ou
 
 ![voi](https://github.com/robj411/value_of_information_example/blob/master/voi.png)
 
-So, learning the background PM2.5 concentration better would increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would increase precision for our estimate under a car increase scenario.
+So, learning the background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car increase scenario.
 
 <hr>
 <hr>
