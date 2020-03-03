@@ -3,17 +3,19 @@ title: "EVPPI example"
 output: html_document
 ---
 
-Start
+## Set up
 
-```{r set up}
+```{r set up,echo=F}
 library(mgcv); 
+library(knitr)
 
 nSamples <- 5000
 ```
 
+## Compute model
+Use saved example, or compute anew: 
 
-use saved example, or compute anew
-```{r load or compute parameters and results}
+```{r load or compute parameters and results,echo=F}
 
 saved_example <- paste0('evppi_example_',nSamples,'_samples.Rds')
 if(file.exists(saved_example)){
@@ -22,117 +24,74 @@ if(file.exists(saved_example)){
   parameter_samples <- example$parameter_samples
   result <- example$result
   
+  cat(paste0('Using example saved as ',saved_example))
 }else{
   
-  library(tensorA)
   library(distr)
   source('pollution_model_functions.R')
+  cat(paste0('Loading computation functions from pollution_model_functions.R'))
   
   ## VARIABLES ##
   parameters <- get_parameters()
   ## CONSTANTS ##
   const <- readRDS('constants.Rds')
+  cat(paste0('Loading constants from constants.Rds'))
   
   parameter_samples <- matrix(0,nrow=nSamples,ncol=length(parameters))
-  result <- list()
+  result <- matrix(0,nrow=nSamples,ncol=length(parameters))
   for(j in 1:nSamples){
     pollution_return <- pollution_calculation(const,parameters)
     parameter_samples[j,] <- pollution_return$parameter_samples
-    result[[j]] <- pollution_return$Util
+    result[j,] <- pollution_return$scenario_burden
   }
   colnames(parameter_samples) <- names(parameters)
   
   saveRDS(list(parameter_samples=parameter_samples,result=result),saved_example)
+  cat(paste0('Saving results to ',saved_example))
   
 }
 ```
 
-The total number of samples is
-```{r length of result}
-length(result)
-```
-Each result has the following dimensions:
-```{r dimensions of each result}
-names(dim(result[[1]]))
-```
-The scenarios are
-```{r scenarios}
-dimnames(result[[1]])$scenario
-```
-The outcomes are
-```{r outcomes}
-dimnames(result[[1]])$outcome
-```
-
-choose the 'best case' scenario, SP2040, and the 'death' outcome
-```{r choose scenario and outcome}
-scenario_index <- 6
-outcome_index <- 1
-```
-
-List the variable parameters to evaluate EVPPI for, and the alpha parameters to be evaluated together
-```{r list variables}
-non_constant_parameters <- c('eta','zeta','xi2','xi3','xi4','xi5','lambda1','lambda2')
-alpha_parameters <- c("alpha1","alpha2","alpha3","alpha4")
-```
-
-get outcome samples and variance: sum over diseases, ages and genders for specific scenario and DALY outcome
-```{r get outcome for computation}
-y <- unlist(lapply(result,function(x) sum(x[[scenario=scenario_index,outcome=outcome_index]])))
-vary <- var(y)
-
-```
-
+## Results
+### Compute result
 EVPPI is evaluated by regressing the outcome against each parameter in turn. 
-```{r show parameter samples}
-head(parameter_samples)
-```
-```{r show parameter dimensions}
-dim(parameter_samples)
-```
-```{r show outcome samples}
-head(y)
-```
-```{r show outcome length}
-length(y)
-```
 
-Evaluate EVPPI for each independent parameter
 ```{r univariate EVPPI}
-evppi <- c()
-for(i in 1:length(non_constant_parameters)){
-  # get parameter's index
-  parameter_index <- which(colnames(parameter_samples)==non_constant_parameters[i])
-  # get parameter's vector of random samples
-  x <- parameter_samples[,parameter_index];
-  # fit parameter samples to outcome
-  model <- gam(y~s(x)); 
-  # evaluate evppi
-  evppi[i] <- (vary-mean((y-model$fitted)^2))/vary*100;
-}
-names(evppi) <- non_constant_parameters
-```
-
-Evaluate EVPPI for dependent parameters
-```{r multivariate EVPPI}
-if(length(y)>=1000){
-  # get alpha parameter samples
-  x <- parameter_samples[,which(colnames(parameter_samples)==alpha_parameters)];
-  ##!! computation takes a few minutes
-  model <- gam(y~te(x[,1],x[,2],x[,3],x[,4]));
-  # get evppi
-  evppi[i+1] <- (vary-mean((y-model$fitted)^2))/vary*100
-  names(evppi)[i+1] <- 'alpha'
+# initialise empty matrix for evppi results
+evppi <- matrix(0,ncol=ncol(result)-1,nrow=ncol(parameter_samples))
+# loop over results, held in columns, omitting the first (baseline)
+for(j in 2:ncol(result)){
+  # extract outcome vector y
+  y <- result[,j]
+  # compute variance
+  vary <- var(y)
+  for(i in 1:ncol(parameter_samples)){
+    # extract parameter vector x
+    x <- parameter_samples[,i];
+    # write y as a smooth model of x
+    model <- gam(y~s(x)); 
+    # compute variance in prediction
+    pred_var <- mean((y-model$fitted)^2)
+    # calculate raw evppi as the expected reduction in variance
+    raw_evppi <- vary-pred_var
+    # calculate evppi as a percentage of observed variance
+    evppi[i,j-1] <- raw_evppi/vary*100;
+  }
 }
 ```
 
-Print result
-```{r EVPPI vector}
-evppi
+### Present result
+```{r EVPPI vector,echo=F}
+scenarios <- c('Scenario 1','Scenario 2')
+labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
+colnames(evppi) <- scenarios
+rownames(evppi) <- labels
+kable(evppi,digits=1)
 ```
 
-```{r plot}
-parameter_names <- c(eta='PM concentration',zeta='Traffic proportion',xi2='Stroke RR',xi3='IHD RR',xi4='Lung cancer RR',
-                     xi5='COPD RR',lambda1='Walking MET',lambda2='Cycling MET',alpha='Vehicle proportions')
-par(mar=c(9,5,1,1)); barplot(evppi,beside=T,names.arg=parameter_names[names(evppi)],las=2,ylab='EVPPI, %',cex.lab=1.25)
+```{r plot,echo=F}
+cols <- c('navyblue','hotpink')
+par(mar=c(12.5,5,1,1))
+x <- barplot(t(evppi),beside=T,names.arg=labels,las=2,cex.names=1.25,cex.lab=1.25,cex.axis=1.25,col=cols,ylab='EVPPI, % of Var(DALY)')
+legend(legend=scenarios,x=2,y=max(evppi),bty='n',fill=cols)
 ```
