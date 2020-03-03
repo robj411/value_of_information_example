@@ -1,134 +1,29 @@
-# value_of_information_example
+# Value of information
 
-## To run the example using the saved samples:
+Value of information (VOI) is a measure of how much one uncertain variable tells you about another uncertain variable. Usually, we're interested in how much an uncertain input tells us about an uncertain output, so that we can anticipate how useful it would be to us to learn more about that input, particularly if there are many inputs we might consider learning about.
 
-Save 'evppi_example_5000_samples.Rds' and run
+The attached example computes the expected value of perfect partial information (EVPPI), that is, the value of learning a single parameter perfectly. In this example there are three parameters, and we can compare their values.
 
-install.packages('mgcv')
+Other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI <= EVPPI <= EVPI.
 
-Run the script 'evppi_notebook.Rmd'. It will load the saved samples. Then, it will compute and plot EVPPI.
+# This example
 
+The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 59. We have a value for that group's disability-adjusted life years (DALYs) due to stroke events, which is a measure of their health burden. Their stroke-DALY health burden is 18,530.
 
-## To run the example generating new samples:
+Additionally, we have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
 
-Save the files 'constants.Rds' and 'pollution_model_functions.R'.
-
-Run
-
-install.packages('mgcv')
-
-install.packages('distr')
-
-install.packages('tensorA')
-
-Run the script 'evppi_notebook.Rmd'.
-
-This will load constants.Rds and pollution_model_functions.R. Then it will generate new samples from the model.
-
-Finally, EVPPI will be computed and plotted.
+![parameters](https://github.com/robj411/value_of_information_example/blob/master/parameters.png)
 
 
-# Details of the constants and the indices used in the pollution model
+# Results
 
+The distibutions of expected health burdens in terms of DALYs are
 
-# 'constants.Rds' contains:
- N : population numbers by age and gender
+![outcomes](https://github.com/robj411/value_of_information_example/blob/master/outcomes.png)
 
- TT : time travelled by age, mode, scenario and gender
+and the parameters that we could most usefully learn to increase precision in our estimates for the two scenarios are
 
- TTT : time travelled by age, mode, scenario and gender
+![voi](https://github.com/robj411/value_of_information_example/blob/master/voi.png)
 
- U : background burden of disease by age, outcome, disease, gender
-
- H : air-pollution dose--response look-up table, by disease and pm value
-
-# INDICES ##
-## age
- 1 18-29
-
- 2 30-44
-
- 3 45-59
-
- 4 60-69
-
- 5 70-79
-
- 6 80+
-## gender
- 1 m
-
- 2 f
-## burden outcome
- 1 death
-
- 2 DALY
-
- 3 YLD
-
- 4 YLL
-## scenario
- 1 SP 2012 (baseline)
-
- 2 expanded centre
-
- 3 peripheral belt
-
- 4 London 2012
-
- 5 California
-
- 6 SP 2040
-## mode (travel_modes)
- 1 walk
-
- 2 cycle
-
- 3 bus
-
- 4 car/taxi
-
- 5 motorbike
-
- 6 metro & train
-## (all_modes)
- 7 LGV
-
- 8 HGV
-
- 9 other motor vehicle
-## diseases 
- 1 stroke
-
- 2 IHD
-
- 3 other cardio/circulatory
-
- 4 T2D
-
- 5 colon cancer
-
- 6 breast cancer
-
- 7 dementia and alzheimer's
-
- 8 depression
-
- 9 all-cause mortality woodcock
-
- 10 pedestrian injury
-
- 11 cyclist injury
-
- 12 mc injury
-
- 13 car, van, bus, truck injury
-
- 14 other road injury
-
- 15 other transport injury
-
- 16 lung cancer
-
- 17 COPD
+So, learning the background PM2.5 concentration better would increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would increase precision for our estimate under a car increase scenario.
 
