@@ -4,7 +4,7 @@ Value of information (VOI) is a measure of how much one uncertain variable tells
 
 The attached example computes the expected value of perfect partial information (EVPPI), that is, the value of learning a single parameter perfectly. In this example there are three parameters, and we can compare their values.
 
-Other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI <= EVPPI <= EVPI.
+Other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI &le; EVPPI &le; EVPI.
 
 # This example
 
