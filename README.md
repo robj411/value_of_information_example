@@ -17,7 +17,7 @@ We have an estimate of the background level of PM2.5, a class of pollutants with
 
 # Results
 
-The distibutions of expected health burdens in terms of DALYs are
+The distributions of expected health burdens in terms of DALYs are
 
 ![outcomes](https://github.com/robj411/value_of_information_example/blob/master/outcomes.png)
 
