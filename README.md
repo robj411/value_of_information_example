@@ -28,9 +28,8 @@ and the parameters that we could most usefully learn to increase precision in ou
 So, learning the background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car increase scenario.
 
 <hr>
-<hr>
 
-# The details
+# Model details
 
 The outcome, the number of DALYs, is a number y. We considered two scenarios, a decrease in car use (scenario 1) and an increase in car use (scenario 2), but let's consider for now that there is just one, for simplicity of notation, and let's call the change in travel D, so that if there were 1,000 km of travel in the baseline, there are 1,000\*D km of travel in the scenario. So, there is one outcome, y, and it is the number of DALYs in the scenario conditions.
 
