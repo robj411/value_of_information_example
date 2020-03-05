@@ -37,9 +37,11 @@ There are three uncertain inputs, x1, x2 and x3. We define x1, the background PM
 
 Then the PM2.5 concentration in the scenario is 
 
-PM2.5 = x1 ( x2\*D + 1 - x2).
+PM2.5 = x1 ( x2\*D + 1 - x2),
 
-We define x3 slightly differently. Recall that x1 is the background concentration of PM2.5. There is some function, f(PM2.5), that maps the PM2.5 concentation onto a relative risk of disease -- here, stroke. This defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We could write
+that is, the amount contributed by cars, scaled by D, added to the amount that exists independently of cars.
+
+The input x3 operates on the relationship between PM2.5 and stroke. There exists a function, f(PM2.5), that maps the PM2.5 concentation onto the relative risk of stroke, which is learnt from observational data. The function f(PM2.5) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We could write
 
 relative risk of stroke (RR) = f(PM2.5).
 
@@ -47,11 +49,11 @@ However, we have some uncertainty about the accuracy of the dose--response relat
 
 RR = 1 + (x3-1)\*f(PM2.5).
 
-We also need the relative risk for the baseline, RR0:
+For our final computation, we also need the relative risk for the baseline, RR0:
 
 RR0 = 1 + (x3-1)\*f(x1).
 
-This RR will be a relative increase or a relative decrease from the baseline RR, and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
+The scenario RR will be a relative increase or a relative decrease from the baseline RR (RR0), and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
 
 y = 18,530 \* RR / RR0.
 
