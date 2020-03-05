@@ -31,31 +31,31 @@ So, learning the background PM2.5 concentration better would most increase preci
 
 # Model details
 
-The outcome, the number of DALYs, is a number y. We considered two scenarios, a decrease in car use (scenario 1) and an increase in car use (scenario 2), but let's consider for now that there is just one, for simplicity of notation, and let's call the change in travel D, so that if there were 1,000 km of travel in the baseline, there are 1,000\*D km of travel in the scenario. So, there is one outcome, y, and it is the number of DALYs in the scenario conditions.
+The outcome, the number of DALYs, is a number _y_. We considered two scenarios, a decrease in car use (scenario 1) and an increase in car use (scenario 2), but let's consider for now that there is just one, for simplicity of notation, and let's call the change in travel _D_, so that if there were 1,000 km of travel in the baseline, there are 1,000\*_D_ km of travel in the scenario. So, there is one outcome, _y_, and it is the number of DALYs in the scenario conditions.
 
-There are three uncertain inputs, x1, x2 and x3. We define x1, the background PM2.5 concentration, to have a lognormal distribution with mean and variance parameters that we specify. We define x2, the fraction of PM2.5 attributable to cars, to have a Beta distribution with parameters alpha and beta that we specify. 
+There are three uncertain inputs, _x1_, _x2_ and _x3_. We define _x1_, the background PM2.5 concentration, to have a lognormal distribution with mean and variance parameters that we specify. We define _x2_, the fraction of PM2.5 attributable to cars, to have a Beta distribution with parameters alpha and beta that we specify. 
 
 Then the PM2.5 concentration in the scenario is 
 
-PM2.5 = x1 ( x2\*D + 1 - x2),
+_PM2.5_ = _x1_ ( _x2\*D_ + 1 - _x2_),
 
-that is, the amount contributed by cars, scaled by D, added to the amount that exists independently of cars.
+that is, the amount contributed by cars, scaled by _D_, added to the amount that exists independently of cars.
 
-The input x3 operates on the relationship between PM2.5 and stroke. There exists a function, f(PM2.5), that maps the PM2.5 concentation onto the relative risk of stroke, which is learnt from observational data. The function f(PM2.5) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We could write
+The input x3 operates on the relationship between PM2.5 and stroke. There exists a function, _f(PM2.5)_, that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function _f(PM2.5)_ defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We could write
 
-relative risk of stroke (RR) = f(PM2.5).
+relative risk of stroke _(RR) = f(PM2.5)_.
 
-However, we have some uncertainty about the accuracy of the dose--response relationship. We capture this with our third parameter x3, which has a lognormal distribution centred on 1, and it reflects the range of values we think are plausible for this relationship. Now the relative risk is multiplied by some scalar:
+However, we have some uncertainty about the accuracy of the dose--response relationship. We capture this with our third parameter _x3_, which has a lognormal distribution centred on 1, and it reflects the range of values we think are plausible for this relationship. Now the relative risk is multiplied by some scalar:
 
-RR = 1 + (x3-1)\*f(PM2.5).
+_RR_ = 1 + (_x3_-1)\*_f(PM2.5)_.
 
-For our final computation, we also need the relative risk for the baseline, RR0:
+For our final computation, we also need the relative risk for the baseline, _RR0_:
 
-RR0 = 1 + (x3-1)\*f(x1).
+_RR0_ = 1 + (_x3_-1)\*_f(x1)_.
 
-The scenario RR will be a relative increase or a relative decrease from the baseline RR (RR0), and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
+The scenario RR will be a relative increase or a relative decrease from the baseline RR (_RR0_), and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
 
-y = 18,530 \* RR / RR0.
+_y_ = 18,530 \* _RR_ / _RR0_.
 
 
 
