@@ -4,11 +4,11 @@ get_parameters <- function(){
   parameters <- list()
   
   ## POLLUTION VARIABLES ##
-  parameters$eta <- Lnorm(2.665364, 0.3234522) # background pollution level
-  parameters$zeta <- Beta(5.795375, 8.947712) # proportion of pollution attributed to cars
+  parameters$x1 <- Lnorm(2.665364, 0.3234522) # background pollution level
+  parameters$x2 <- Beta(5.795375, 8.947712) # proportion of pollution attributed to cars
   
   ## POLLUTION AND HEALTH VARIABLES ##
-  parameters$xi <- Lnorm(0,0.25) # stroke
+  parameters$x3 <- Lnorm(0,0.25) # stroke
   
   return(parameters)
 }
@@ -33,11 +33,11 @@ pollution_calculation <- function(const,parameters){
   }
   
   ## POLLUTION CALCULATION
-  scenario_pm <- eta*(zeta*scenario_travel_ratio+1-zeta)
+  scenario_pm <- x1*(x2*scenario_travel_ratio+1-x2)
   
   ## HEALTH-IMPACT CALCULATIONS
   # uncertainty in relative-risk dose--response curve
-  RR_curve_sample <- 1+(RR-1)*xi
+  RR_curve_sample <- 1+(RR-1)*x3
   # cast as matrix to apply interpolation
   RR_curve_sample_mat <- matrix(RR_curve_sample,ncol=1,byrow=T)
   # interpolate relative risk for each disease given pollution inhalation
