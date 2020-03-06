@@ -59,15 +59,16 @@ EVPPI result
 
 |                        |  Scenario 1|  Scenario 2|
 |------------------------|-----------:|-----------:|
-| Background PM2.5       |        52.5|        34.3|
-| Car fraction           |        27.0|        42.7|
-| Dose-response estimate |        13.7|        19.5|
+| Background PM2.5       |        53.1|        34.8|
+| Car fraction           |        24.0|        39.5|
+| Dose-response estimate |        13.8|        19.2|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
 So, learning the background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car increase scenario.
 
-<hr>
+------------------------------------------------------------------------
+
 Model details
 =============
 

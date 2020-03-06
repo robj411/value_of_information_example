@@ -119,7 +119,7 @@ legend(legend=scenarios,x=2,y=max(evppi)+2,bty='n',fill=cols)
 
 So, learning the background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car increase scenario.
 
-<hr>
+******
 
 # Model details
 
