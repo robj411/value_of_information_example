@@ -12,7 +12,7 @@ Other VOI metrics include the expected value of perfect information (EVPI), whic
 
 # This example
 
-The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 59. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
+The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 50. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
 
 We have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
 
@@ -20,23 +20,31 @@ We have an estimate of the background level of PM2.5, a class of pollutants with
 ```{r set up,echo=F}
 suppressPackageStartupMessages({library(mgcv,quietly = T);
 library(knitr,quietly = T);
-library(distr,quietly = T)})
+library(distr,quietly = T);
+library(earth,quietly = T)})
 
-nSamples <- 5000
+nSamples <- 1000
+strokeDR <- readRDS('strokeDR.Rds')
+source('pollution_model_functions.R')
 ```
 
 ```{r plot parameters,echo=F, fig.height = 5, fig.width = 15}
-source('pollution_model_functions.R')
-  
+
+## INPUTS
 parameters <- get_parameters()
 #knitr::opts_chunk$set(fig.width=15, fig.height=5) 
 par(mar=c(5,5,2,2),mfrow=c(1,3),cex.axis=2,cex.lab=2)
+plot(density(parameters[[1]]),frame=F,typ='l',xlab='Background PM2.5',ylab='Density',lwd=2,lty=1,col='navyblue',main='')
+plot(density(parameters[[2]]),frame=F,typ='l',xlab='Car fraction',ylab='Density',lwd=2,lty=1,col='navyblue',main='')
 x <- 1:60
-plot(x,d(parameters[[1]])(x),frame=F,typ='l',xlab='Background PM2.5',ylab='Density',lwd=2,lty=1,col='navyblue')
-x <- seq(0,1,length=100)
-plot(x,d(parameters[[2]])(x),frame=F,typ='l',xlab='Car fraction',ylab='Density',lwd=2,lty=1,col='navyblue')
-x <- seq(0,10,length=100)
-plot(x,d(parameters[[3]])(x),frame=F,typ='l',xlab='PM2.5',ylab='Relative risk',lwd=2,lty=1,col='navyblue')
+param_names <- c('alpha','beta','gamma','tmrel')
+param_cols <- match(param_names,colnames(strokeDR))
+dr_samples <- dose_response(x,alpha=strokeDR[1,param_cols[1]],beta=strokeDR[1,param_cols[2]],gamma=strokeDR[1,param_cols[3]],tmrel=strokeDR[1,param_cols[4]])
+plot(x,dr_samples,frame=F,typ='l',xlab='PM2.5',ylab='Relative risk',lwd=2,lty=1,col=adjustcolor('navyblue', alpha.f = 0.5),ylim=c(1,2))
+for(i in 2:20){
+  dr_samples <- dose_response(x,alpha=strokeDR[i,param_cols[1]],beta=strokeDR[i,param_cols[2]],gamma=strokeDR[i,param_cols[3]],tmrel=strokeDR[i,param_cols[4]])
+  lines(x,dr_samples,typ='l',lwd=2,lty=1,col=adjustcolor('navyblue', alpha.f = 0.5))
+}
   
 ```
 
@@ -45,11 +53,14 @@ plot(x,d(parameters[[3]])(x),frame=F,typ='l',xlab='PM2.5',ylab='Relative risk',l
   
 ## CONSTANTS ##
 const <- readRDS('constants.Rds')
+  
+## CONSTANTS
+for(i in 1:length(const)) assign(names(const)[i],const[[i]])
 
 parameter_samples <- matrix(0,nrow=nSamples,ncol=length(parameters))
-result <- matrix(0,nrow=nSamples,ncol=length(parameters))
+result <- matrix(0,nrow=nSamples,ncol=length(scenario_travel_ratio))
 for(j in 1:nSamples){
-  pollution_return <- pollution_calculation(const,parameters)
+  pollution_return <- pollution_calculation(parameters,j)
   parameter_samples[j,] <- pollution_return$parameter_samples
   result[j,] <- pollution_return$scenario_burden
 }
@@ -79,15 +90,17 @@ So what are the parameters that we could most usefully learn to increase precisi
 EVPPI is evaluated by regressing the outcome against each parameter in turn. 
 
 ```{r univariate EVPPI}
+labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
 # initialise empty matrix for evppi results
-evppi <- matrix(0,ncol=ncol(result)-1,nrow=ncol(parameter_samples))
+evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(labels))
 # loop over results, held in columns, omitting the first (baseline)
 for(j in 2:ncol(result)){
   # extract outcome vector y
   y <- result[,j]
   # compute variance
   vary <- var(y)
-  for(i in 1:ncol(parameter_samples)){
+  # compute for first two (univariate) parameters
+  for(i in 1:2){
     # extract parameter vector x
     x <- parameter_samples[,i];
     # write y as a smooth model of x
@@ -100,21 +113,37 @@ for(j in 2:ncol(result)){
     evppi[i,j-1] <- raw_evppi/vary*100;
   }
 }
+
+## use earth for four-dimensional parameters
+# loop over results, held in columns, omitting the first (baseline)
+for(j in 2:ncol(result)){
+  # extract outcome vector y
+  y <- result[,j]
+  # compute variance
+  vary <- var(y)
+  # write y as a smooth model of xs
+  model <- earth(y~parameter_samples[,3:6],degree=4); 
+  # compute variance in prediction
+  pred_var <- mean((y-model$fitted)^2)
+  # calculate raw evppi as the expected reduction in variance
+  raw_evppi <- vary-pred_var
+  # calculate evppi as a percentage of observed variance
+  evppi[3,j-1] <- raw_evppi/vary*100;
+}
 ```
 
 ## EVPPI result
 ```{r EVPPI vector,echo=F}
 scenarios <- c('Scenario 1','Scenario 2')
-labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
 colnames(evppi) <- scenarios
 rownames(evppi) <- labels
 kable(evppi,digits=1)
 ```
 
-```{r plot,echo=F,fig.width=4}
+```{r plot,echo=F,fig.width=4.5}
 par(mar=c(12.5,5,1,1))
 x <- barplot(t(evppi),beside=T,names.arg=labels,las=2,cex.names=1.25,cex.lab=1.25,cex.axis=1.25,col=cols,ylab='EVPPI, % of Var(incidence)')
-legend(legend=scenarios,x=2,y=max(evppi)+2,bty='n',fill=cols)
+legend(legend=scenarios,x=0.5,y=max(evppi)+2,bty='n',fill=cols)
 ```
 
 So, learning the background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car increase scenario.

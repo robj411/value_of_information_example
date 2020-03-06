@@ -10,7 +10,7 @@ Other VOI metrics include the expected value of perfect information (EVPI), whic
 This example
 ============
 
-The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 59. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
+The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 50. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
 
 We have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
 
@@ -31,15 +31,17 @@ EVPPI method
 EVPPI is evaluated by regressing the outcome against each parameter in turn.
 
 ``` r
+labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
 # initialise empty matrix for evppi results
-evppi <- matrix(0,ncol=ncol(result)-1,nrow=ncol(parameter_samples))
+evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(labels))
 # loop over results, held in columns, omitting the first (baseline)
 for(j in 2:ncol(result)){
   # extract outcome vector y
   y <- result[,j]
   # compute variance
   vary <- var(y)
-  for(i in 1:ncol(parameter_samples)){
+  # compute for first two (univariate) parameters
+  for(i in 1:2){
     # extract parameter vector x
     x <- parameter_samples[,i];
     # write y as a smooth model of x
@@ -52,6 +54,23 @@ for(j in 2:ncol(result)){
     evppi[i,j-1] <- raw_evppi/vary*100;
   }
 }
+
+## use earth for four-dimensional parameters
+# loop over results, held in columns, omitting the first (baseline)
+for(j in 2:ncol(result)){
+  # extract outcome vector y
+  y <- result[,j]
+  # compute variance
+  vary <- var(y)
+  # write y as a smooth model of xs
+  model <- earth(y~parameter_samples[,3:6],degree=4); 
+  # compute variance in prediction
+  pred_var <- mean((y-model$fitted)^2)
+  # calculate raw evppi as the expected reduction in variance
+  raw_evppi <- vary-pred_var
+  # calculate evppi as a percentage of observed variance
+  evppi[3,j-1] <- raw_evppi/vary*100;
+}
 ```
 
 EVPPI result
@@ -59,9 +78,9 @@ EVPPI result
 
 |                        |  Scenario 1|  Scenario 2|
 |------------------------|-----------:|-----------:|
-| Background PM2.5       |        53.1|        34.8|
-| Car fraction           |        24.0|        39.5|
-| Dose-response estimate |        13.8|        19.2|
+| Background PM2.5       |         6.7|         4.8|
+| Car fraction           |        42.7|        43.5|
+| Dose-response estimate |        25.2|        41.3|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 

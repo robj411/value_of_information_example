@@ -4,13 +4,20 @@ get_parameters <- function(){
   parameters <- list()
   
   ## POLLUTION VARIABLES ##
-  parameters$x1 <- Lnorm(2.665364, 0.3234522) # background pollution level
-  parameters$x2 <- Beta(5.795375, 8.947712) # proportion of pollution attributed to cars
+  parameters$x1 <- rlnorm(nSamples,2.665364, 0.3234522) # background pollution level
+  parameters$x2 <- rbeta(nSamples,5.795375, 8.947712) # proportion of pollution attributed to cars
   
   ## POLLUTION AND HEALTH VARIABLES ##
-  parameters$x3 <- Lnorm(0,0.25) # stroke
+  parameters$alpha <- strokeDR$alpha
+  parameters$beta <- strokeDR$beta
+  parameters$gamma <- strokeDR$gamma
+  parameters$tmrel <- strokeDR$tmrel
   
   return(parameters)
+}
+
+dose_response <- function(pm,alpha,beta,gamma,tmrel){
+  1 + alpha * ( 1 - exp(- beta * ( pmax(pm - tmrel,0) )^gamma ) )
 }
 
 interp <- function(V,HdV){
@@ -20,15 +27,12 @@ interp <- function(V,HdV){
   return(out)
 }
 
-pollution_calculation <- function(const,parameters){
-  
-  ## CONSTANTS
-  for(i in 1:length(const)) assign(names(const)[i],const[[i]])
+pollution_calculation <- function(parameters,j){
   
   ## PARAMETER VALUES
   parameter_samples <- c()
   for(i in 1:length(parameters)) {
-    assign(names(parameters)[i],r(parameters[[i]])(1))
+    assign(names(parameters)[i],parameters[[i]][j])
     parameter_samples[i] <- get(names(parameters)[i])
   }
   
@@ -36,13 +40,7 @@ pollution_calculation <- function(const,parameters){
   scenario_pm <- x1*(x2*scenario_travel_ratio+1-x2)
   
   ## HEALTH-IMPACT CALCULATIONS
-  # uncertainty in relative-risk dose--response curve
-  RR_curve_sample <- 1+(RR-1)*x3
-  # cast as matrix to apply interpolation
-  RR_curve_sample_mat <- matrix(RR_curve_sample,ncol=1,byrow=T)
-  # interpolate relative risk for each disease given pollution inhalation
-  RR_realisation <- sapply(scenario_pm,interp,HdV=RR_curve_sample_mat) 
-  
+  RR_realisation <- dose_response(scenario_pm,alpha,beta,gamma,tmrel) 
   
   ## BURDEN-OF-DISEASE CALCULATIONS
   # relative risk relative to baseline scenario
