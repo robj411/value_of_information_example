@@ -78,13 +78,13 @@ EVPPI result
 
 |                        |  Scenario 1|  Scenario 2|
 |------------------------|-----------:|-----------:|
-| Background PM2.5       |         6.7|         4.8|
-| Car fraction           |        42.7|        43.5|
-| Dose-response estimate |        25.2|        41.3|
+| Background PM2.5       |         1.1|         1.2|
+| Car fraction           |        54.5|        42.7|
+| Dose-response estimate |        33.6|        44.2|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
-So, learning the background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car increase scenario.
+So, learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration or the dose--response relationship better would most increase precision for our estimate under a car increase scenario.
 
 ------------------------------------------------------------------------
 
@@ -101,17 +101,15 @@ PM2.5 = *x*<sub>1</sub>(*x*<sub>2</sub>*D* + 1 − *x*<sub>2</sub>),
 
 that is, the amount contributed by cars, scaled by *D*, added to the amount that exists independently of cars.
 
-The input *x*<sub>3</sub> operates on the relationship between PM2.5 and stroke. There exists a function, *f*(PM2.5), that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function *f*(PM2.5) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We could write
+The input *x*<sub>3</sub> defines the relationship between PM2.5 and stroke. There exists a function, *f*(PM2.5, *x*<sub>3</sub>), that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function *f*(PM2.5, *x*<sub>3</sub>) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014), where *x*<sub>3</sub> = {*α*, *β*, *γ*, *τ*}, and
 
-relative risk of stroke (*R*) = *f*(PM2.5).
+relative risk of stroke (*R*) = *f*(PM2.5, *x*<sub>3</sub>)=1 + *α*(1 − exp(−*β*(PM2.5 − *τ*)<sup>*γ*</sup>)).
 
-However, we have some uncertainty about the accuracy of the dose--response relationship. We capture this with our third parameter *x*<sub>3</sub>, which has a lognormal distribution centred on 1, and it reflects the range of values we think are plausible for this relationship. Now the relative risk is multiplied by some scalar:
-
-*R* = 1 + (*x*<sub>3</sub> − 1)*f*(PM2.5).
+The uncertainty about the accuracy of the dose--response relationship is captured through the sampled values of the components of *x*<sub>3</sub>.
 
 For our final computation, we also need the relative risk for the baseline, *R*<sub>0</sub>:
 
-*R*<sub>0</sub> = 1 + (*x*<sub>3</sub> − 1)*f*(*x*<sub>1</sub>).
+*R*<sub>0</sub> = 1 + (*x*<sub>3</sub> − 1)*f*(*x*<sub>1</sub>, *x*<sub>3</sub>).
 
 The scenario RR will be a relative increase or a relative decrease from the baseline RR (*R*<sub>0</sub>), and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
 
