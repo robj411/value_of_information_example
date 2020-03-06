@@ -73,7 +73,7 @@ par(mar=c(5,5,2,2),cex.lab=1.2,cex.axis=1.2)
 plot(density(result[,2]),col=cols[1],frame=F,xlab='Incidence',ylab='Density',main='',lwd=2,xlim=range(result))
 lines(density(result[,3]),col=cols[2],lwd=2)
 abline(v=background_burden,col='grey',lwd=3,lty=2)
-legend(col=cols,legend=c('Scenario 1','Scenario 2'),bty='n',x=15e3,y=2e-3,lwd=2)
+legend(col=cols,legend=c('Scenario 1','Scenario 2'),bty='n',x=min(result),y=2e-3,lwd=2)
 
 ```
 

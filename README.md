@@ -78,9 +78,9 @@ EVPPI result
 
 |                        |  Scenario 1|  Scenario 2|
 |------------------------|-----------:|-----------:|
-| Background PM2.5       |         1.4|         1.6|
-| Car fraction           |        52.7|        45.3|
-| Dose-response estimate |        26.2|        40.0|
+| Background PM2.5       |         2.5|         3.3|
+| Car fraction           |        51.5|        41.3|
+| Dose-response estimate |        26.2|        38.5|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
