@@ -24,13 +24,6 @@ dose_response <- function(pm,alpha,beta,gamma,tmrel){
   1 + alpha * ( 1 - exp(- beta * ( pmax(pm - tmrel,0) )^gamma ) )
 }
 
-interp <- function(V,HdV){
-  lower <- sapply(V,function(x)max(1,min(floor(x),dim(HdV)[1])))
-  upper <- sapply(V,function(x)min(ceiling(x),dim(HdV)[1]))
-  out <- HdV[lower,] + (HdV[upper,] - HdV[lower,])*(V - lower)
-  return(out)
-}
-
 pollution_calculation <- function(parameters,j){
   
   ## PARAMETER VALUES
