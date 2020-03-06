@@ -2,16 +2,20 @@
 get_parameters <- function(){
   
   parameters <- list()
+  for(param_name in c('x1','x2','alpha','beta','gamma','tau'))
+    parameters[[param_name]] <- rep(0,nSamples)
   
   ## POLLUTION VARIABLES ##
-  parameters$x1 <- rlnorm(nSamples,2.665364, 0.3234522) # background pollution level
+  parameters$x1[1:nSamples] <- rlnorm(nSamples,2.665364, 0.3234522) # background pollution level
   parameters$x2 <- rbeta(nSamples,5.795375, 8.947712) # proportion of pollution attributed to cars
   
   ## POLLUTION AND HEALTH VARIABLES ##
-  parameters$alpha <- strokeDR$alpha
-  parameters$beta <- strokeDR$beta
-  parameters$gamma <- strokeDR$gamma
-  parameters$tmrel <- strokeDR$tmrel
+  suppressWarnings({
+  parameters$alpha[1:nSamples] <- strokeDR$alpha
+  parameters$beta[1:nSamples] <- strokeDR$beta
+  parameters$gamma[1:nSamples] <- strokeDR$gamma
+  parameters$tmrel[1:nSamples] <- strokeDR$tmrel
+  })
   
   return(parameters)
 }

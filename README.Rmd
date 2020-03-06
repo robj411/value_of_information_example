@@ -23,7 +23,7 @@ library(knitr,quietly = T);
 library(distr,quietly = T);
 library(earth,quietly = T)})
 
-nSamples <- 1000
+nSamples <- 5000
 strokeDR <- readRDS('strokeDR.Rds')
 source('pollution_model_functions.R')
 ```
@@ -49,7 +49,7 @@ for(i in 2:20){
 ```
 
 
-```{r load or compute parameters and results,echo=F}
+```{r compute parameters and results,echo=F}
   
 ## CONSTANTS ##
 const <- readRDS('constants.Rds')
@@ -78,7 +78,7 @@ par(mar=c(5,5,2,2),cex.lab=1.2,cex.axis=1.2)
 plot(density(result[,2]),col=cols[1],frame=F,xlab='Incidence',ylab='Density',main='',lwd=2,xlim=range(result))
 lines(density(result[,3]),col=cols[2],lwd=2)
 abline(v=const$background_burden,col='grey',lwd=3,lty=2)
-legend(col=cols,legend=c('Scenario 1','Scenario 2'),bty='n',x=2.2e4,y=9e-4,lwd=2)
+legend(col=cols,legend=c('Scenario 1','Scenario 2'),bty='n',x=15e3,y=2e-3,lwd=2)
 
 ```
 
