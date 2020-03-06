@@ -78,9 +78,9 @@ EVPPI result
 
 |                        |  Scenario 1|  Scenario 2|
 |------------------------|-----------:|-----------:|
-| Background PM2.5       |         2.5|         3.3|
-| Car fraction           |        51.5|        41.3|
-| Dose-response estimate |        26.2|        38.5|
+| Background PM2.5       |         3.0|         3.3|
+| Car fraction           |        44.8|        41.2|
+| Dose-response estimate |        24.2|        41.2|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
@@ -101,7 +101,7 @@ PM2.5 = *x*<sub>1</sub>(*x*<sub>2</sub>*D* + 1 − *x*<sub>2</sub>),
 
 that is, the amount contributed by cars, scaled by *D*, added to the amount that exists independently of cars.
 
-The input *x*<sub>3</sub> defines the relationship between PM2.5 and stroke. There exists a function, *f*(PM2.5, *x*<sub>3</sub>), that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function *f*(PM2.5, *x*<sub>3</sub>) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014), where *x*<sub>3</sub> = {*α*, *β*, *γ*, *τ*}, and
+The input *x*<sub>3</sub> defines the relationship between PM2.5 and stroke. There exists a function, *f*(PM2.5, *x*<sub>3</sub>), that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function *f*(PM2.5, *x*<sub>3</sub>) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014, doi: 10.1289/ehp.1307049), where *x*<sub>3</sub> = {*α*, *β*, *γ*, *τ*}, and
 
 relative risk of stroke (*R*) = *f*(PM2.5, *x*<sub>3</sub>)=1 + *α*(1 − exp(−*β*(PM2.5 − *τ*)<sup>*γ*</sup>)).
 
