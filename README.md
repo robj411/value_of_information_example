@@ -3,9 +3,9 @@ Value of information
 
 Value of information (VOI) is a measure of how much one uncertain variable tells you about another uncertain variable. In health-impact modelling, where we have many inputs and an output of interest, we're interested in how much an uncertain input tells us about the uncertain output, so that we can anticipate how useful it would be to us to learn more about that input, particularly if there are many inputs we might consider learning about.
 
-The attached example computes the expected value of perfect partial information (EVPPI). That is, the value of learning a single parameter perfectly. In this example, there are three parameters, and we compare their EVPPI values.
+The attached example computes the expected value of perfect partial information (EVPPI). That is, the value of learning a single parameter perfectly. In this example, there are three parameters, and we compare their EVPPI values. This method is similar to sensitivity analyses such as tornado plots, where the influence of individual parameters on the outcome is estimated by considering the ranges in the outcome obtained when parameters are set to their 5th and 95th quantiles in turn.
 
-Other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI ≤ EVPPI ≤ EVPI.
+Beyond EVPPI, other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI ≤ EVPPI ≤ EVPI. The methods we present here are based on the theory published [here](https://www.tandfonline.com/doi/full/10.1080/01621459.2018.1562932), where the methods are presented formally and the connection to decision-making problems is made explicity in Sections 2.2, 2.3 and 2.4.
 
 This example
 ============
@@ -25,10 +25,32 @@ The distributions of expected health burdens in terms of incidence are
 
 So what are the parameters that we could most usefully learn to increase precision in our estimates for the two scenarios?
 
+Tornado plots
+-------------
+
+A traditional method to answer this question would be to use a tornado plot, where we fix all the parameters except one to the median, evaluate the outcome for the 5th and 95th quantiles of the one parameters, repeat for all parameters, and compare the ranges in outcomes from each parameter range. The quantiles of our parameters are shown below:
+
+|       |    5%|    50%|    95%|
+|:------|-----:|------:|------:|
+| x1    |  8.40|  14.39|  24.38|
+| x2    |  0.20|   0.39|   0.60|
+| alpha |  1.99|   3.32|  69.79|
+| beta  |  0.00|   0.01|   0.04|
+| gamma |  0.28|   0.44|   0.83|
+| tmrel |  2.60|   4.25|   5.68|
+
+Note that we have taken the quantiles for the four dose-response parameters, rather than for the curve they define.
+
+To demonstrate the tornado plot, we consider the case where travel increases:
+
+![](README_files/figure-markdown_github/tornado-1.png)
+
+However, while the plot is useful for the parameters we might be able to learn on their own, *x*<sub>1</sub> and *x*<sub>2</sub>, it is less useful for the parameters for the dose-response curve. This is because it's not the case that we could learn one parameter in particular. In addition, it's also not useful to take the 5th and 95th quantiles of *β*, say, while taking the 50th quantiles for the other parameters. This is because they have a joint density.
+
 EVPPI method
 ------------
 
-EVPPI is evaluated by regressing the outcome against each parameter in turn.
+Instead, with EVPPI, we can evaluate the impact of variability in parameters, whilst also considering the distributions of the other parameters. EVPPI is evaluated by regressing the outcome against each parameter in turn, or against a set of parameters.
 
 ``` r
 labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
@@ -77,10 +99,10 @@ EVPPI result
 ------------
 
 |                        |  Scenario 1|  Scenario 2|
-|------------------------|-----------:|-----------:|
-| Background PM2.5       |         3.0|         3.3|
-| Car fraction           |        44.8|        41.2|
-| Dose-response estimate |        24.2|        41.2|
+|:-----------------------|-----------:|-----------:|
+| Background PM2.5       |         1.5|         2.2|
+| Car fraction           |        50.3|        42.1|
+| Dose-response estimate |        29.0|        41.8|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 

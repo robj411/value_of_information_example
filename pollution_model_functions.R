@@ -2,7 +2,7 @@
 get_parameters <- function(){
   
   parameters <- list()
-  for(param_name in c('x1','x2','alpha','beta','gamma','tau'))
+  for(param_name in c('x1','x2','alpha','beta','gamma','tmrel'))
     parameters[[param_name]] <- rep(0,nSamples)
   
   ## POLLUTION VARIABLES ##
