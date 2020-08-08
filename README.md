@@ -30,16 +30,13 @@ Tornado plots
 
 A traditional method to answer this question would be to use a tornado plot, where we fix all the parameters except one to the median, evaluate the outcome for the 5th and 95th quantiles of the one parameters, repeat for all parameters, and compare the ranges in outcomes from each parameter range. The quantiles of our parameters are shown below:
 
-|       |    5%|    50%|    95%|
-|:------|-----:|------:|------:|
-| x1    |  8.40|  14.39|  24.38|
-| x2    |  0.20|   0.39|   0.60|
-| alpha |  1.99|   3.32|  69.79|
-| beta  |  0.00|   0.01|   0.04|
-| gamma |  0.28|   0.44|   0.83|
-| tmrel |  2.60|   4.25|   5.68|
+|              |    5%|    50%|    95%|
+|:-------------|-----:|------:|------:|
+| x1           |  8.53|  14.36|  24.73|
+| x2           |  0.20|   0.39|   0.61|
+| DR\_quantile |  0.05|   0.50|   0.95|
 
-Note that we have taken the quantiles for the four dose-response parameters, rather than for the curve they define.
+Note that we take the quantiles not for the four dose-response parameters, but rather for the curve they define.
 
 To demonstrate the tornado plot, we consider the case where travel increases:
 
@@ -100,9 +97,9 @@ EVPPI result
 
 |                        |  Scenario 1|  Scenario 2|
 |:-----------------------|-----------:|-----------:|
-| Background PM2.5       |         1.5|         2.2|
-| Car fraction           |        50.3|        42.1|
-| Dose-response estimate |        29.0|        41.8|
+| Background PM2.5       |         3.4|         3.6|
+| Car fraction           |        42.1|        41.7|
+| Dose-response estimate |        26.0|        39.8|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
