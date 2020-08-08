@@ -3,20 +3,6 @@ title: "Value of information"
 output: rmarkdown::github_document
 ---
 
-
-Value of information (VOI) is a measure of how much one uncertain variable tells you about another uncertain variable. In health-impact modelling, where we have many inputs and an output of interest, we're interested in how much an uncertain input tells us about the uncertain output, so that we can anticipate how useful it would be to us to learn more about that input, particularly if there are many inputs we might consider learning about.
-
-The attached example computes the expected value of perfect partial information (EVPPI). That is, the value of learning a single parameter perfectly. In this example, there are three parameters, and we compare their EVPPI values. This method is similar to sensitivity analyses such as tornado plots, where the influence of individual parameters on the outcome is estimated by considering the ranges in the outcome obtained when parameters are set to their 5th and 95th quantiles in turn.
-
-Beyond EVPPI, other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI &le; EVPPI &le; EVPI. The methods we present here are based on the theory published [here](https://www.tandfonline.com/doi/full/10.1080/01621459.2018.1562932), where the methods are presented formally and the connection to decision-making problems is made explicity in Sections 2.2, 2.3 and 2.4.
-
-# This example
-
-The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 50. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
-
-We have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
-
-
 ```{r set up,echo=F,message=F}
 library( lubridate,quietly = T )
 library(grid,quietly = T)
@@ -33,12 +19,28 @@ library(mgcv,quietly = T);
 library(knitr,quietly = T);
 library(distr,quietly = T);
 library(earth,quietly = T)
+options(scipen=999)
 
 nSamples <- 5000
 fixed_values <- readRDS('fixed_values.Rds')
 for(i in 1:length(fixed_values)) assign(names(fixed_values)[i],fixed_values[[i]])
 source('pollution_model_functions.R')
 ```
+
+Value of information (VOI) is a measure of how much one uncertain variable tells you about another uncertain variable. In health-impact modelling, where we have many inputs and an output of interest, we're interested in how much an uncertain input tells us about the uncertain output, so that we can anticipate how useful it would be to us to learn more about that input, particularly if there are many inputs we might consider learning about.
+
+The attached example computes the expected value of perfect partial information (EVPPI). That is, the value of learning a single parameter perfectly. In this example, there are three parameters, and we compare their EVPPI values. This method is similar to sensitivity analyses such as tornado plots, where the influence of individual parameters on the outcome is estimated by considering the ranges in the outcome obtained when parameters are set to their 5th and 95th quantiles in turn.
+
+Beyond EVPPI, other VOI metrics include the expected value of perfect information (EVPI), which is the value of learning all parameters perfectly, and the expected value of sample information (EVSI), which is the value of collecting data that informs knowledge of one parameter or more. Therefore, we have that EVSI &le; EVPPI &le; EVPI. The methods we present here are based on the theory published [here](https://www.tandfonline.com/doi/full/10.1080/01621459.2018.1562932), where the methods are presented formally and the connection to decision-making problems is made explicity in Sections 2.2, 2.3 and 2.4.
+
+# This example
+
+The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 50. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is `r background_burden`. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
+
+We have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
+
+
+
 
 ```{r plot parameters,echo=F, fig.height = 5, fig.width = 15}
 
@@ -95,9 +97,12 @@ So what are the parameters that we could most usefully learn to increase precisi
 A traditional method to answer this question would be to use a tornado plot, where we fix all the parameters except one to the median, evaluate the outcome for the 5th and 95th quantiles of the one parameters, repeat for all parameters, and compare the ranges in outcomes from each parameter range. The quantiles of our parameters are shown below:
 
 ```{r quantiles,echo=F}
+parameter_names <- c('Background pollution','Car fraction','DR function')
 quantiles <- t(apply(parameter_samples,2,quantile,c(0.05,0.5,0.95)))[1:2,]
 quantiles <- rbind(quantiles,DR_quantile=c(0.05,0.5,0.95))
-kable(quantiles,digits=2)
+quantile_print <- quantiles
+rownames(quantile_print) <- parameter_names
+kable(quantile_print,digits=2, booktabs=TRUE, escape = FALSE)
 ```
 
 Note that we take the quantiles not for the four dose-response parameters, but rather for the curve they define.
@@ -131,7 +136,7 @@ base.value <- pollution_return$scenario_burden[3]
 df <- as.data.frame(tor_result )
 colnames(df)[1:4] <- c('LB','UB','Lower_Bound','Upper_Bound')
 df$UL_Difference <- df[,4]-df[,3]
-df$Parameter <- rownames(quantiles)
+df$Parameter <- parameter_names
 order.parameters <- df %>% arrange(UL_Difference) %>%
   mutate(Parameter=factor(x=Parameter, levels=Parameter)) %>%
   select(Parameter) %>% unlist() %>% levels()
@@ -165,9 +170,8 @@ However, while the plot is useful for the parameters we might be able to learn o
 Instead, with EVPPI, we can evaluate the impact of variability in parameters, whilst also considering the distributions of the other parameters. EVPPI is evaluated by regressing the outcome against each parameter in turn, or against a set of parameters. 
 
 ```{r univariate EVPPI}
-labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
 # initialise empty matrix for evppi results
-evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(labels))
+evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(parameter_names))
 # loop over results, held in columns, omitting the first (baseline)
 for(j in 2:ncol(result)){
   # extract outcome vector y
@@ -211,7 +215,7 @@ for(j in 2:ncol(result)){
 ```{r EVPPI vector,echo=F}
 scenarios <- c('Scenario 1','Scenario 2')
 colnames(evppi) <- scenarios
-rownames(evppi) <- labels
+rownames(evppi) <- parameter_names
 kable(evppi,digits=1)
 ```
 
@@ -226,7 +230,7 @@ plt <- ggplot() + geom_col(data = meltevppi, aes(x = Parameter,y=EVPPI, fill = S
   theme(text=element_text(family="Garamond", size=14))
 plt + theme(axis.text=element_text(family="Garamond", size=14),axis.title=element_text(family="Garamond", size=14) ,panel.grid.major = element_blank(), panel.grid.minor = element_blank(),  panel.background = element_blank())
 
-#x <- barplot(t(evppi),beside=T,names.arg=labels,las=2,cex.names=1.25,cex.lab=1.25,cex.axis=1.25,col=cols,ylab='EVPPI, % of Var(incidence)')
+#x <- barplot(t(evppi),beside=T,names.arg=parameter_names,las=2,cex.names=1.25,cex.lab=1.25,cex.axis=1.25,col=cols,ylab='EVPPI, % of Var(incidence)')
 #legend(legend=scenarios,x=0.5,y=max(evppi)+2,bty='n',fill=cols)
 ```
 

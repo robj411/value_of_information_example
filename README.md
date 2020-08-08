@@ -10,7 +10,7 @@ Beyond EVPPI, other VOI metrics include the expected value of perfect informatio
 This example
 ============
 
-The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 50. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18,530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
+The attached example uses a simplified, idealised health-impact model taken from the "integrated transport and health" suite of models. It consists of a single demographic group, who are female and aged 45 to 50. We have a value for that group's incidence of stroke events, which is a measure of their health burden. Their stroke incidence is 18530. We're interested to predict the health burden in "scenarios" in which something about their environment changes relative to the "baseline", which is the current state of affairs.
 
 We have an estimate of the background level of PM2.5, a class of pollutants with diameter less than 2.5 micrometers with associations to chronic diseases; we have an estimate of the proportion of PM2.5 that is attributable to car use; we have an estimate of the dose--response relationship between PM2.5 and incidence of stroke; and we have two scenarios, one in which car use decreases, and one in which car use increases. We use a model to predict what the health burden will be in the different scenarios, and we use EVPPI to understand which uncertainties in our model drive the uncertainty in the estimated health burden.
 
@@ -30,11 +30,11 @@ Tornado plots
 
 A traditional method to answer this question would be to use a tornado plot, where we fix all the parameters except one to the median, evaluate the outcome for the 5th and 95th quantiles of the one parameters, repeat for all parameters, and compare the ranges in outcomes from each parameter range. The quantiles of our parameters are shown below:
 
-|              |    5%|    50%|    95%|
-|:-------------|-----:|------:|------:|
-| x1           |  8.53|  14.36|  24.73|
-| x2           |  0.20|   0.39|   0.61|
-| DR\_quantile |  0.05|   0.50|   0.95|
+|                      |    5%|    50%|    95%|
+|:---------------------|-----:|------:|------:|
+| Background pollution |  8.60|  14.29|  24.88|
+| Car fraction         |  0.20|   0.38|   0.61|
+| DR function          |  0.05|   0.50|   0.95|
 
 Note that we take the quantiles not for the four dose-response parameters, but rather for the curve they define.
 
@@ -50,9 +50,8 @@ EVPPI method
 Instead, with EVPPI, we can evaluate the impact of variability in parameters, whilst also considering the distributions of the other parameters. EVPPI is evaluated by regressing the outcome against each parameter in turn, or against a set of parameters.
 
 ``` r
-labels <- c('Background PM2.5','Car fraction','Dose-response estimate')
 # initialise empty matrix for evppi results
-evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(labels))
+evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(parameter_names))
 # loop over results, held in columns, omitting the first (baseline)
 for(j in 2:ncol(result)){
   # extract outcome vector y
@@ -95,11 +94,11 @@ for(j in 2:ncol(result)){
 EVPPI result
 ------------
 
-|                        |  Scenario 1|  Scenario 2|
-|:-----------------------|-----------:|-----------:|
-| Background PM2.5       |         3.4|         3.6|
-| Car fraction           |        42.1|        41.7|
-| Dose-response estimate |        26.0|        39.8|
+|                      |  Scenario 1|  Scenario 2|
+|:---------------------|-----------:|-----------:|
+| Background pollution |         1.5|         2.2|
+| Car fraction         |        51.5|        43.9|
+| DR function          |        29.8|        42.1|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
