@@ -30,11 +30,11 @@ Tornado plots
 
 A traditional method to answer this question would be to use a tornado plot, where we fix all the parameters except one to the median, evaluate the outcome for the 5th and 95th quantiles of the one parameters, repeat for all parameters, and compare the ranges in outcomes from each parameter range. The quantiles of our parameters are shown below:
 
-|                      |    5%|    50%|    95%|
-|:---------------------|-----:|------:|------:|
-| Background pollution |  8.60|  14.29|  24.88|
-| Car fraction         |  0.20|   0.38|   0.61|
-| DR function          |  0.05|   0.50|   0.95|
+|                  |    5%|    50%|    95%|
+|:-----------------|-----:|------:|------:|
+| Background PM2.5 |  8.39|  14.28|  24.41|
+| Car fraction     |  0.19|   0.39|   0.60|
+| DR function      |  0.05|   0.50|   0.95|
 
 Note that we take the quantiles not for the four dose-response parameters, but rather for the curve they define.
 
@@ -42,7 +42,7 @@ To demonstrate the tornado plot, we consider the case where travel increases:
 
 ![](README_files/figure-markdown_github/tornado-1.png)
 
-However, while the plot is useful for the parameters we might be able to learn on their own, *x*<sub>1</sub> and *x*<sub>2</sub>, it is less useful for the parameters for the dose-response curve. This is because it's not the case that we could learn one parameter in particular. In addition, it's also not useful to take the 5th and 95th quantiles of *β*, say, while taking the 50th quantiles for the other parameters. This is because they have a joint density.
+However, while the plot is useful for the parameters we might be able to learn on their own, *μ* and *π*, it is less useful for the parameters for the dose-response curve. This is because it's not the case that we could learn one parameter in particular. In addition, it's also not useful to take the 5th and 95th quantiles of *β*, say, while taking the 50th quantiles for the other parameters. This is because they have a joint density.
 
 EVPPI method
 ------------
@@ -94,11 +94,11 @@ for(j in 2:ncol(result)){
 EVPPI result
 ------------
 
-|                      |  Scenario 1|  Scenario 2|
-|:---------------------|-----------:|-----------:|
-| Background pollution |         1.5|         2.2|
-| Car fraction         |        51.5|        43.9|
-| DR function          |        29.8|        42.1|
+|                  |  Scenario 1|  Scenario 2|
+|:-----------------|-----------:|-----------:|
+| Background PM2.5 |         0.7|         1.3|
+| Car fraction     |        54.5|        45.4|
+| DR function      |        31.3|        41.2|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
@@ -111,23 +111,23 @@ Model details
 
 The outcome, the incidence, is a number *y*. We considered two scenarios, a decrease in car use (scenario 1) and an increase in car use (scenario 2), but let's consider for now that there is just one, for simplicity of notation, and let's call the change in travel *D*, so that if there were 1,000 km of travel in the baseline, there are 1,000*D* km of travel in the scenario. So, there is one outcome, *y*, and it is the stroke incidence in the scenario conditions.
 
-There are three uncertain inputs, *x*<sub>1</sub>, *x*<sub>2</sub> and *x*<sub>3</sub>. We define *x*<sub>1</sub>, the background PM2.5 concentration, to have a lognormal distribution with mean and variance parameters that we specify. We define *x*<sub>2</sub>, the fraction of PM2.5 attributable to cars, to have a Beta distribution with parameters alpha and beta that we specify.
+There are three uncertain inputs, *μ*, *π* and *θ*<sub>3</sub>. We define *μ*, the background PM2.5 concentration, to have a lognormal distribution with mean and variance parameters that we specify. We define *π*, the fraction of PM2.5 attributable to cars, to have a Beta distribution with parameters alpha and beta that we specify.
 
 Then the PM2.5 concentration in the scenario is
 
-PM2.5 = *x*<sub>1</sub>(*x*<sub>2</sub>*D* + 1 − *x*<sub>2</sub>),
+PM2.5 = *μ*(*π**D* + 1 − *π*),
 
 that is, the amount contributed by cars, scaled by *D*, added to the amount that exists independently of cars.
 
-The input *x*<sub>3</sub> defines the relationship between PM2.5 and stroke. There exists a function, *f*(PM2.5, *x*<sub>3</sub>), that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function *f*(PM2.5, *x*<sub>3</sub>) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014, doi: 10.1289/ehp.1307049), where *x*<sub>3</sub> = {*α*, *β*, *γ*, *τ*}, and
+The input *θ*<sub>3</sub> defines the relationship between PM2.5 and stroke. There exists a function, *g*<sub>2</sub>(PM2.5, *θ*<sub>3</sub>), that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function *g*<sub>2</sub>(PM2.5, *θ*<sub>3</sub>) defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014, doi: 10.1289/ehp.1307049), where *θ*<sub>3</sub> = {*α*, *β*, *γ*, *τ*}, and
 
-relative risk of stroke (*R*) = *f*(PM2.5, *x*<sub>3</sub>)=1 + *α*(1 − exp(−*β*(PM2.5 − *τ*)<sup>*γ*</sup>)).
+relative risk of stroke (*R*) = *g*<sub>2</sub>(PM2.5, *θ*<sub>3</sub>)=1 + *α*(1 − exp(−*β*(PM2.5 − *τ*)<sup>*γ*</sup>)).
 
-The uncertainty about the accuracy of the dose--response relationship is captured through the sampled values of the components of *x*<sub>3</sub>.
+The uncertainty about the accuracy of the dose--response relationship is captured through the sampled values of the components of *θ*<sub>3</sub>.
 
 For our final computation, we also need the relative risk for the baseline, *R*<sub>0</sub>:
 
-*R*<sub>0</sub> = 1 + (*x*<sub>3</sub> − 1)*f*(*x*<sub>1</sub>, *x*<sub>3</sub>).
+*R*<sub>0</sub> = 1 + (*θ*<sub>3</sub> − 1)*g*<sub>2</sub>(*μ*, *θ*<sub>3</sub>).
 
 The scenario RR will be a relative increase or a relative decrease from the baseline RR (*R*<sub>0</sub>), and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
 

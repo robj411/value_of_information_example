@@ -97,7 +97,7 @@ So what are the parameters that we could most usefully learn to increase precisi
 A traditional method to answer this question would be to use a tornado plot, where we fix all the parameters except one to the median, evaluate the outcome for the 5th and 95th quantiles of the one parameters, repeat for all parameters, and compare the ranges in outcomes from each parameter range. The quantiles of our parameters are shown below:
 
 ```{r quantiles,echo=F}
-parameter_names <- c('Background pollution','Car fraction','DR function')
+parameter_names <- c('Background PM2.5','Car fraction','DR function')
 quantiles <- t(apply(parameter_samples,2,quantile,c(0.05,0.5,0.95)))[1:2,]
 quantiles <- rbind(quantiles,DR_quantile=c(0.05,0.5,0.95))
 quantile_print <- quantiles
@@ -163,7 +163,7 @@ ggplot() +
 
 ```
 
-However, while the plot is useful for the parameters we might be able to learn on their own, $x_1$ and $x_2$, it is less useful for the parameters for the dose-response curve. This is because it's not the case that we could learn one parameter in particular. In addition, it's also not useful to take the 5th and 95th quantiles of $\beta$, say, while taking the 50th quantiles for the other parameters. This is because they have a joint density.
+However, while the plot is useful for the parameters we might be able to learn on their own, $\mu$ and $\pi$, it is less useful for the parameters for the dose-response curve. This is because it's not the case that we could learn one parameter in particular. In addition, it's also not useful to take the 5th and 95th quantiles of $\beta$, say, while taking the 50th quantiles for the other parameters. This is because they have a joint density.
 
 ## EVPPI method
 
@@ -242,23 +242,23 @@ So, learning the car fraction of background PM2.5 concentration better would mos
 
 The outcome, the incidence, is a number $y$. We considered two scenarios, a decrease in car use (scenario 1) and an increase in car use (scenario 2), but let's consider for now that there is just one, for simplicity of notation, and let's call the change in travel $D$, so that if there were 1,000 km of travel in the baseline, there are 1,000$D$ km of travel in the scenario. So, there is one outcome, $y$, and it is the stroke incidence in the scenario conditions.
 
-There are three uncertain inputs, $x_1$, $x_2$ and $x_3$. We define $x_1$, the background PM2.5 concentration, to have a lognormal distribution with mean and variance parameters that we specify. We define $x_2$, the fraction of PM2.5 attributable to cars, to have a Beta distribution with parameters alpha and beta that we specify. 
+There are three uncertain inputs, $\mu$, $\pi$ and $\theta_3$. We define $\mu$, the background PM2.5 concentration, to have a lognormal distribution with mean and variance parameters that we specify. We define $\pi$, the fraction of PM2.5 attributable to cars, to have a Beta distribution with parameters alpha and beta that we specify. 
 
 Then the PM2.5 concentration in the scenario is 
 
-$\text{PM}2.5 = x_1 ( x_2D + 1 - x_2)$,
+$\text{PM}2.5 = \mu (\pi D + 1 - \pi)$,
 
 that is, the amount contributed by cars, scaled by $D$, added to the amount that exists independently of cars.
 
-The input $x_3$ defines the relationship between PM2.5 and stroke. There exists a function, $f(\text{PM}2.5,x_3)$, that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function $f(\text{PM}2.5,x_3)$ defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014, doi: 10.1289/ehp.1307049), where $x_3=\{\alpha,\beta,\gamma,\tau\}$, and
+The input $\theta_3$ defines the relationship between PM2.5 and stroke. There exists a function, $g_2(\text{PM}2.5,\theta_3)$, that maps the PM2.5 concentation onto the relative risk (RR) of stroke, which is learnt from observational data. The function $g_2(\text{PM}2.5,\theta_3)$ defines a dose--response relationship, where the dose is the PM2.5 and the response is relative risk of stroke. The risk is relative to a PM2.5 value of 0, so the relative risk at PM2.5=0 is 1. We use values from Burnett et al. (2014, doi: 10.1289/ehp.1307049), where $\theta_3=\{\alpha,\beta,\gamma,\tau\}$, and
 
-relative risk of stroke ($R$) = $f(\text{PM}2.5,x_3) = 1 + \alpha ( 1 - \exp(- \beta ( \text{PM}2.5 - \tau )^{\gamma} ) )$.
+relative risk of stroke ($R$) = $g_2(\text{PM}2.5,\theta_3) = 1 + \alpha ( 1 - \exp(- \beta ( \text{PM}2.5 - \tau )^{\gamma} ) )$.
 
-The uncertainty about the accuracy of the dose--response relationship is captured through the sampled values of the components of $x_3$. 
+The uncertainty about the accuracy of the dose--response relationship is captured through the sampled values of the components of $\theta_3$. 
 
 For our final computation, we also need the relative risk for the baseline, $R_0$:
 
-$R_0 = 1 + (x_3-1)f(x_1,x_3)$.
+$R_0 = 1 + (\theta_3-1)g_2(\mu,\theta_3)$.
 
 The scenario RR will be a relative increase or a relative decrease from the baseline RR ($R_0$), and this relationship is applied to the baseline burden of disease in order to estimate the burden of disease in the scenario:
 
