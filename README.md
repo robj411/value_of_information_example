@@ -32,8 +32,8 @@ A traditional method to answer this question would be to use a tornado plot, whe
 
 |                  |    5%|    50%|    95%|
 |:-----------------|-----:|------:|------:|
-| Background PM2.5 |  8.39|  14.28|  24.41|
-| Car fraction     |  0.19|   0.39|   0.60|
+| Background PM2.5 |  8.48|  14.37|  24.52|
+| Car fraction     |  0.20|   0.39|   0.60|
 | DR function      |  0.05|   0.50|   0.95|
 
 Note that we take the quantiles not for the four dose-response parameters, but rather for the curve they define.
@@ -91,18 +91,31 @@ for(j in 2:ncol(result)){
 }
 ```
 
-EVPPI result
-------------
+EVPPI result 1: basic
+---------------------
 
 |                  |  Scenario 1|  Scenario 2|
 |:-----------------|-----------:|-----------:|
-| Background PM2.5 |         0.7|         1.3|
-| Car fraction     |        54.5|        45.4|
-| DR function      |        31.3|        41.2|
+| Background PM2.5 |         2.7|         3.0|
+| Car fraction     |        50.1|        44.6|
+| DR function      |        29.0|        41.1|
 
 ![](README_files/figure-markdown_github/plot-1.png)
 
 So, learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration or the dose--response relationship better would most increase precision for our estimate under a car increase scenario.
+
+EVPPI result 2: additional uncertainty in parameter *π*
+-------------------------------------------------------
+
+|                  |  Scenario 1|  Scenario 2|
+|:-----------------|-----------:|-----------:|
+| Background PM2.5 |         1.9|         2.3|
+| Car fraction     |        55.5|        49.9|
+| DR function      |        24.6|        37.3|
+
+![](README_files/figure-markdown_github/plot%202-1.png)
+
+With more uncertainty in the parameter *π*, it is more clearly the most influential parameter to learn.
 
 ------------------------------------------------------------------------
 

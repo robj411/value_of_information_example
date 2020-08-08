@@ -19,6 +19,7 @@ library(mgcv,quietly = T);
 library(knitr,quietly = T);
 library(distr,quietly = T);
 library(earth,quietly = T)
+library(gtools)
 options(scipen=999)
 
 nSamples <- 5000
@@ -211,7 +212,7 @@ for(j in 2:ncol(result)){
 }
 ```
 
-## EVPPI result
+## EVPPI result 1: basic
 ```{r EVPPI vector,echo=F}
 scenarios <- c('Scenario 1','Scenario 2')
 colnames(evppi) <- scenarios
@@ -235,6 +236,84 @@ plt + theme(axis.text=element_text(family="Garamond", size=14),axis.title=elemen
 ```
 
 So, learning the car fraction of background PM2.5 concentration better would most increase precision for our estimate under a car decrease scenario. Learning the car fraction of background PM2.5 concentration or the dose--response relationship better would most increase precision for our estimate under a car increase scenario.
+
+
+## EVPPI result 2: additional uncertainty in parameter $\pi$
+```{r univariate EVPPI plus,echo=F}
+# initialise empty matrix for evppi results
+evppi <- matrix(0,ncol=ncol(result)-1,nrow=length(parameter_names))
+# add noise to parameter 2 (pi)
+parameters[[2]] <- inv.logit(logit(parameters[[2]]) + rnorm(nrow(parameter_samples),0,0.32))
+# re-compute result
+result <- matrix(0,nrow=nSamples,ncol=length(scenario_travel_ratio))
+for(j in 1:nSamples){
+  pollution_return <- pollution_calculation(parameters,j)
+  parameter_samples[j,] <- pollution_return$parameter_samples
+  result[j,] <- pollution_return$scenario_burden
+}
+# loop over results, held in columns, omitting the first (baseline)
+for(j in 2:ncol(result)){
+  # extract outcome vector y
+  y <- result[,j]
+  # compute variance
+  vary <- var(y)
+  # compute for first two (univariate) parameters
+  for(i in 1:2){
+    # extract parameter vector x
+    x <- parameter_samples[,i];
+    # write y as a smooth model of x
+    model <- gam(y~s(x)); 
+    # compute variance in prediction
+    pred_var <- mean((y-model$fitted)^2)
+    # calculate raw evppi as the expected reduction in variance
+    raw_evppi <- vary-pred_var
+    # calculate evppi as a percentage of observed variance
+    evppi[i,j-1] <- raw_evppi/vary*100;
+  }
+}
+
+## use earth for four-dimensional parameters
+# loop over results, held in columns, omitting the first (baseline)
+for(j in 2:ncol(result)){
+  # extract outcome vector y
+  y <- result[,j]
+  # compute variance
+  vary <- var(y)
+  # write y as a smooth model of xs
+  model <- earth(y~parameter_samples[,3:6],degree=4); 
+  # compute variance in prediction
+  pred_var <- mean((y-model$fitted)^2)
+  # calculate raw evppi as the expected reduction in variance
+  raw_evppi <- vary-pred_var
+  # calculate evppi as a percentage of observed variance
+  evppi[3,j-1] <- raw_evppi/vary*100;
+}
+```
+
+```{r EVPPI vector 2,echo=F}
+scenarios <- c('Scenario 1','Scenario 2')
+colnames(evppi) <- scenarios
+rownames(evppi) <- parameter_names
+kable(evppi,digits=1)
+```
+
+```{r plot 2,echo=F,fig.width=10}
+#par(mar=c(12.5,5,1,1))
+cols <- c('navyblue','hotpink')
+names(cols) <- colnames(evppi)
+colScale <- scale_fill_manual(values = cols)
+meltevppi <- melt(evppi)
+colnames(meltevppi) <- c('Parameter','Scenario','EVPPI')
+plt <- ggplot() + geom_col(data = meltevppi, aes(x = Parameter,y=EVPPI, fill = Scenario), position = "dodge") + colScale +
+  theme(text=element_text(family="Garamond", size=14))
+plt + theme(axis.text=element_text(family="Garamond", size=14),axis.title=element_text(family="Garamond", size=14) ,panel.grid.major = element_blank(), panel.grid.minor = element_blank(),  panel.background = element_blank())
+
+#x <- barplot(t(evppi),beside=T,names.arg=parameter_names,las=2,cex.names=1.25,cex.lab=1.25,cex.axis=1.25,col=cols,ylab='EVPPI, % of Var(incidence)')
+#legend(legend=scenarios,x=0.5,y=max(evppi)+2,bty='n',fill=cols)
+```
+
+With more uncertainty in the parameter $\pi$, it is more clearly the most influential parameter to learn.
+
 
 ******
 
